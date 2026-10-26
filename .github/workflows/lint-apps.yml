@@ -1,3 +1,4 @@
+# ng-runner-policy: private-jit-only-v1
 name: Lint apps
 
 on:
@@ -11,7 +12,7 @@ permissions:
 jobs:
   lint-apps:
     name: Lint apps
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","x64","ng-shared-main-umbrel-apps","ng-main-run-{0}","gha-{0}-lint-apps"]}}', github.run_id)) }}
     steps:
       # This uses pull_request_target so fork PRs can lint without maintainer approval.
       # Keep the linter code trusted: install and run tooling from the base repo only.
