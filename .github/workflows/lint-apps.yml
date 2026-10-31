@@ -3,6 +3,7 @@ name: Lint apps
 
 on:
   pull_request_target:
+    types: [labeled]
     branches:
       - master
 
@@ -12,6 +13,20 @@ permissions:
 jobs:
   lint-apps:
     name: Lint apps
+    if: >-
+      (
+        (
+        github.event_name == 'pull_request_target' &&
+        github.event.action == 'labeled' &&
+        (github.event.label.name == 'action:scan' || github.event.label.name == 'pool:private') &&
+        contains(github.event.pull_request.labels.*.name, 'action:scan') &&
+        contains(github.event.pull_request.labels.*.name, 'pool:private') &&
+        github.event.pull_request.head.repo.full_name == github.repository
+        )
+      ) &&
+      (
+        true
+      )
     runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","x64","ng-shared-main-umbrel-apps","ng-main-run-{0}","gha-{0}-lint-apps"]}}', github.run_id)) }}
     steps:
       # This uses pull_request_target so fork PRs can lint without maintainer approval.
