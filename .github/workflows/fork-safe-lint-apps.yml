@@ -18,18 +18,13 @@ jobs:
       github.event.pull_request.base.ref == 'master'
     runs-on:
       group: public-fork-jit
-      labels:
-        - self-hosted
-        - linux
-        - x64
-        - public-pr-umbrel-apps
-        - "ng-public-run-${{ github.run_id }}"
+      labels: ["self-hosted", "linux", "x64", "public-pr-umbrel-apps", "ng-public-run-${{ github.run_id }}"]
     timeout-minutes: 30
     steps:
       - name: Checkout trusted lint tooling
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          ref: ${{ github.event.pull_request.base.ref }}
+          ref: ${{ github.event.pull_request.base.sha }}
           path: trusted
           fetch-depth: 0
           persist-credentials: false
