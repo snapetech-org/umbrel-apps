@@ -1,14 +1,15 @@
 # ng-runner-policy: private-jit-only-v1
 name: Public fork app lint
-run-name: action:scan:pool:private:public-fork
+run-name: action:ci:pool:public:fork
 
 on:
   pull_request:
     branches: [master]
-    types: [opened, reopened, synchronize, ready_for_review]
+    types: [labeled]
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: public-fork-app-lint-${{ github.event.pull_request.number }}
@@ -17,9 +18,18 @@ concurrency:
 jobs:
   lint-fork:
     if: >-
-      github.event.pull_request.draft == false &&
+      github.event.action == 'labeled' &&
+      github.actor == 'snapetech' &&
+      (startsWith(github.event.label.name, 'action:') ||
+       startsWith(github.event.label.name, 'pool:')) &&
+      contains(github.event.pull_request.labels.*.name, 'action:ci') &&
+      (contains(github.event.pull_request.labels.*.name, 'pool:public') ||
+       contains(github.event.pull_request.labels.*.name, 'pool:hybrid')) &&
       github.event.pull_request.head.repo.fork == true &&
       github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name &&
       github.event.pull_request.base.repo.full_name == 'snapetech-org/umbrel-apps' &&
       github.event.pull_request.base.ref == 'master'
-    uses: snapetech-org/umbrel-apps/.github/workflows/fork-safe-lint-apps.yml@86e622658bf6209ba9a5419c98bd0a07dbc3f29e
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: snapetech-org/umbrel-apps/.github/workflows/fork-safe-lint-apps.yml@db14f00fadaefa03680c60faa34a5675e374197b
