@@ -29,9 +29,9 @@ jobs:
       )
     runs-on: ${{ fromJSON(format('{{"group":"ng-shared-main-jit","labels":["self-hosted","linux","x64","ng-shared-main-umbrel-apps","ng-main-run-{0}","gha-{0}-lint-apps"]}}', github.run_id)) }}
     steps:
-      # This uses pull_request_target so fork PRs can lint without maintainer approval.
-      # Keep the linter code trusted: install and run tooling from the base repo only.
-      # The PR checkout below must be treated as app package data, not executable code.
+      # This workflow handles labeled pull requests from branches in this repository.
+      # Public forks use the pinned workflow_call path on the isolated public-fork JIT group.
+      # The PR checkout below is app package data, not executable code.
       - name: Checkout trusted lint tooling
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:

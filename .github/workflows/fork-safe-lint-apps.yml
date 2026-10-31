@@ -1,0 +1,60 @@
+# ng-runner-policy: private-jit-only-v1
+name: Umbrel apps public-fork lint
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-apps:
+    name: Lint fork app packages in isolation
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.fork == true &&
+      github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name &&
+      github.event.pull_request.base.repo.full_name == 'snapetech-org/umbrel-apps' &&
+      github.event.pull_request.base.ref == 'master'
+    runs-on:
+      group: public-fork-jit
+      labels:
+        - self-hosted
+        - linux
+        - x64
+        - public-pr-umbrel-apps
+        - "ng-public-run-${{ github.run_id }}"
+    timeout-minutes: 30
+    steps:
+      - name: Checkout trusted lint tooling
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: trusted
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: trusted/package-lock.json
+      - name: Install trusted lint tooling
+        run: npm ci --ignore-scripts
+        working-directory: trusted
+      - name: Test trusted lint tooling
+        run: npm run test:lint
+        working-directory: trusted
+      - name: Checkout fork package data
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: submission
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fetch trusted base branch for diff
+        run: git fetch --no-tags ../trusted "HEAD:refs/remotes/base/${{ github.event.pull_request.base.ref }}"
+        working-directory: submission
+      - name: Lint changed app packages
+        run: node .tools/lint-apps.mjs --root ../submission --changed "base/${{ github.event.pull_request.base.ref }}...HEAD" --check-images --format github
+        working-directory: trusted
